@@ -46,6 +46,17 @@ function port_section(){
         #{ OUTPUT="$(grep -oPz ${REGEX} ${FILE} 2>/dev/null)"; } 2>/dev/null
         OUTPUT="$(grep -oPz ${REGEX} ${FILE} | tr -d '\0')";  # A better solution
     fi
+    # If OUTPUT is still 0, the --reason might have been used, which changes headers
+    if [[ "${#OUTPUT}" -eq 0 ]]; then
+        REGEX="(?s)(?<=REASON\n)\d.+?(?=\nWarning:)"
+        OUTPUT="$(grep -oPz ${REGEX} ${FILE} | tr -d '\0')";  # A better solution
+    fi
+    if [[ "${#OUTPUT}" -eq 0 ]]; then
+        # When the option -O is not used in Nmap we'll likely need this pattern
+        REGEX="(?s)(?<=REASON\n)\d.+?(?=\n\n)"
+        #{ OUTPUT="$(grep -oPz ${REGEX} ${FILE} 2>/dev/null)"; } 2>/dev/null
+        OUTPUT="$(grep -oPz ${REGEX} ${FILE} | tr -d '\0')";  # A better solution
+    fi
     echo -e "${OUTPUT}"
 }
 
@@ -54,7 +65,7 @@ function get_ports(){
     FORM="$2"   # File format
     STAT="$3"   # Status
     PROT="$4"   # Protocol
-    IPv4="$5"   # Whether or not to copy the IPv4
+    IPaddr="$5"   # Whether or not to copy the IP address
 
     # NMAP
     if [[ "${FORM}" == "nmap" ]]; then
@@ -83,9 +94,13 @@ function get_ports(){
         fi
         PORTS="$(echo -e "${PORT_PROTO}" | grep -oP ${REGEX})"
 
-        if [[ ${IPv4} ]]; then
+        if [[ ${IPaddr} == true ]]; then
             IPREG='(?<=^Nmap scan report for )(\d{1,3}\.){3}\d{1,3}'
             HOST="$(grep -m1 -oP "${IPREG}" "${FILE}")"
+            if [[ ${#HOST} -eq 0 ]]; then
+                IPREG6='(?<=^Nmap scan report for )([a-f0-9:]+$)'
+                HOST="$(grep -m1 -oP "${IPREG6}" "${FILE}")"
+            fi
         fi
 
     # GNMAP
@@ -111,9 +126,13 @@ function get_ports(){
         fi
         PORTS="$(grep -oP ${REGEX} "${FILE}")"
 
-        if [[ ${IPv4} ]]; then
+        if [[ ${IPaddr} == true ]]; then
             IPREG='(?<=^Host: )(\d{1,3}\.){3}\d{1,3}'
             HOST="$(grep -m1 -oP "${IPREG}" "${FILE}")"
+            if [[ ${#HOST} -eq 0 ]]; then
+                IPREG6='(?<=^Host: )([a-f0-9:]+)'
+                HOST="$(grep -m1 -oP "${IPREG6}" "${FILE}")"
+            fi
         fi
 
     # XML
@@ -139,9 +158,13 @@ function get_ports(){
         fi
         PORTS="$(grep -oP "${REGEX}" "${FILE}")"
 
-        if [[ ${IPv4} ]]; then
+        if [[ ${IPaddr} == true ]]; then
             IPREG='(?<=^<address addr=")(\d{1,3}\.){3}\d{1,3}(?=" addrtype="ipv4"/>)'
             HOST="$(grep -m1 -oP "${IPREG}" "${FILE}")"
+            if [[ ${#HOST} -eq 0 ]]; then
+                IPREG6='(?<=^<address addr=")[a-f0-9:]+(?=" addrtype="ipv6"/>)'
+                HOST="$(grep -m1 -oP "${IPREG6}" "${FILE}")"
+            fi
         fi
 
     else
