@@ -1,0 +1,15 @@
+# Variables
+export EDITOR=vim
+export TRANSFERS="${HOME}/Downloads/Transfers"
+
+# Settings
+test -d ${TRANSFERS} || mkdir -p ${TRANSFERS}
+
+# Functions
+function cpinfo() {
+    rmcolour $1 | xclip -sel clip
+}
+
+# Aliases
+alias ...='setxkbmap es dvorak && setxkbmap -option ctrl:swapcaps,shift:both_capslock'
+alias transfers="cd $TRANSFERS"
