@@ -26,7 +26,7 @@ if [[ "${BINDIR_OK}" = "true" && "${SCRIPTDIR_OK}" = "true" ]]; then
 	for bashscript in "${SCRIPTS[@]}"; do
 		SCRIPTNAME="$(basename ${bashscript} .sh)"
 		cp -f "${bashscript}" "${SCRIPTDIR}/${bashscript}"
-		ln -s -f "${SCRIPTDIR}/${bashscript}" "${BIN}/${SCRIPTNAME}"
+		ln -s -f "${SCRIPTDIR}/${bashscript}" "${BINDIR}/${SCRIPTNAME}"
 		chmod +x "${SCRIPTDIR}/${bashscript}"
 	done
 	echo -e "${GOOD_MSG}Done!${RST_MSG}"
